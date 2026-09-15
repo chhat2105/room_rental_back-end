@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: room-rental-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: room_rental_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d room_rental_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    container_name: room-rental-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: room_rental_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: MyChhat
+      JWT_SECRET: change-this-secret-key-to-something-long-and-random
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:
