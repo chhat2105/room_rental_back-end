@@ -1,92 +1,133 @@
 # Room Rental — Spring Boot Backend
 
-Project សម្រាប់ប្រព័ន្ធជួលបន្ទប់ (Room Rental System) — Java + Spring Boot + Gradle
-រៀបចំតាម **Package by Layer** structure (ដូចគម្រោង BookingEase)។
+Complete Room Rental System backend built with **Java 17**, **Spring Boot 3.3.4**, **Spring Security (JWT)**, **Spring Data JPA**, **PostgreSQL**, and **Springdoc OpenAPI (Swagger UI)**.
 
-## Folder Structure
+---
 
+## 🏗️ Architecture & Folder Structure
+
+Organized cleanly by layer:
 ```
 src/main/java/com/chhatkh/dev
  ├── advices        -> Global exception handling (@RestControllerAdvice)
- ├── configs        -> Security config, CORS, Beans
- ├── controllers    -> REST API endpoints (@RestController)
- ├── dtos           -> Request/Response objects
- ├── entities       -> JPA @Entity classes (map ទៅ database table)
- ├── exceptions     -> Custom exception classes
- ├── filters        -> Servlet filters (ឧ. JWT auth filter)
- ├── repositories   -> JpaRepository interfaces
- ├── services       -> Business logic
- ├── utils          -> Helper / utility classes
- └── RoomRentalApplication.java -> Main class
+ ├── configs        -> SecurityConfig (JWT + CORS), OpenApiConfig (Swagger), DataSeeder
+ ├── controllers    -> REST endpoints (Auth, Room, Booking, Review, Favorite, Inquiry, File, Dashboard)
+ ├── dtos           -> Request & Response DTOs
+ ├── entities       -> JPA entities (User, Room, Booking, Review, Favorite, Inquiry, Role, RoomType, BookingStatus)
+ ├── exceptions     -> Custom exceptions (ResourceNotFoundException, BadRequestException, UnauthorizedException)
+ ├── filters        -> JWT Authentication Filter
+ ├── repositories   -> Spring Data JPA Repositories
+ ├── security       -> CustomUserDetails, CustomUserDetailsService, JwtTokenProvider
+ ├── services       -> Business logic services
+ └── RoomRentalApplication.java
 ```
 
-## Sample Feature Included: `Room`
+---
 
-ដើម្បីបង្ហាញលំហូរពេញលេញ (Controller → Service → Repository → Entity),
-ខ្ញុំបានបង្កើត sample "Room" CRUD feature រួចហើយ៖
+## 🔑 Default Seeded Accounts
 
-- `entities/Room.java`
-- `dtos/RoomDto.java`
-- `repositories/RoomRepository.java`
-- `services/RoomService.java`
-- `controllers/RoomController.java`
-- `exceptions/ResourceNotFoundException.java` + `advices/GlobalExceptionHandler.java`
+The application automatically seeds initial data if the database is empty:
 
-Endpoints:
-| Method | Path | Description |
-|---|---|---|
-| GET | /api/rooms | List all rooms |
-| GET | /api/rooms/{id} | Get one room |
-| POST | /api/rooms | Create room |
-| PUT | /api/rooms/{id} | Update room |
-| DELETE | /api/rooms/{id} | Delete room |
+| Role | Username | Email | Password |
+|---|---|---|---|
+| **Admin** | `admin` | admin@roomrental.com | `admin123` |
+| **Landlord** | `chhat_landlord` | landlord@roomrental.com | `landlord123` |
+| **Tenant** | `sokha_tenant` | sokha@roomrental.com | `tenant123` |
 
-## Setup — Option A: Docker (ណែនាំ)
+---
 
-តម្រូវឲ្យមាន Docker + Docker Compose ដំឡើងរួច។
+## 📡 REST API Endpoints Overview
+
+### 1. Authentication & Profile (`/api/auth`)
+- `POST /api/auth/register` - Register a new user (`ROLE_TENANT` or `ROLE_LANDLORD`)
+- `POST /api/auth/login` - Login with username/email and password, returns Bearer token
+- `GET /api/auth/me` - Get current authenticated user profile
+- `PUT /api/auth/profile` - Update full name, phone number, bio, avatar
+- `PUT /api/auth/change-password` - Change password
+
+### 2. Rooms (`/api/rooms`)
+- `GET /api/rooms` - Search & filter rooms (query params: `keyword`, `city`, `district`, `roomType`, `minPrice`, `maxPrice`, `available`)
+- `GET /api/rooms/{id}` - Get room details by ID (including average rating and review count)
+- `GET /api/rooms/my-rooms` - List rooms owned by the authenticated landlord
+- `POST /api/rooms` - Create a new room (Landlord)
+- `PUT /api/rooms/{id}` - Update room details (Owner / Admin)
+- `PATCH /api/rooms/{id}/toggle-availability` - Toggle available/rented status
+- `DELETE /api/rooms/{id}` - Delete room
+
+### 3. Bookings & Reservations (`/api/bookings`)
+- `POST /api/bookings` - Create booking request for a room (Tenant)
+- `GET /api/bookings/{id}` - View booking details
+- `GET /api/bookings/my-bookings` - Tenant's booking history
+- `GET /api/bookings/landlord/requests` - Landlord's incoming booking requests
+- `PUT /api/bookings/{id}/status` - Update status (`CONFIRMED`, `REJECTED`, `CANCELLED`, `COMPLETED`)
+
+### 4. Reviews & Ratings (`/api/rooms/{roomId}/reviews` & `/api/reviews`)
+- `POST /api/rooms/{roomId}/reviews` - Submit review and rating (1–5 stars)
+- `GET /api/rooms/{roomId}/reviews` - View all reviews for a room
+- `DELETE /api/reviews/{id}` - Delete a review
+
+### 5. Favorites / Wishlist (`/api/favorites`)
+- `POST /api/favorites/{roomId}` - Toggle bookmark / favorite
+- `GET /api/favorites/my-favorites` - List saved rooms for the user
+- `GET /api/favorites/{roomId}/status` - Check if room is bookmarked
+
+### 6. Inquiries / Messages (`/api/inquiries`)
+- `POST /api/inquiries` - Send direct inquiry/message to room landlord
+- `GET /api/inquiries/received` - Landlord receives tenant inquiries
+- `GET /api/inquiries/sent` - Tenant checks sent inquiries
+
+### 7. File & Image Uploads (`/api/uploads`)
+- `POST /api/uploads/image` - Upload single image (room photo or avatar)
+- `POST /api/uploads/images` - Upload multiple room photos
+- `GET /api/uploads/{filename}` - Retrieve / stream uploaded image
+
+### 8. Dashboard & Users (`/api/dashboard` & `/api/users`)
+- `GET /api/dashboard/stats` - Total rooms, available rooms, bookings, total revenue (Admin only)
+- `GET /api/users` - Admin user listing
+- `PATCH /api/users/{id}/toggle-status` - Admin activate/deactivate account
+
+---
+
+## 📖 Swagger API Documentation
+
+When the application is running, access Swagger UI in your browser:
+- **Swagger UI**: [http://localhost:9091/swagger-ui.html](http://localhost:9091/swagger-ui.html)
+- **OpenAPI JSON**: [http://localhost:9091/v3/api-docs](http://localhost:9091/v3/api-docs)
+
+To test secured endpoints in Swagger:
+1. Call `POST /api/auth/login`
+2. Copy the `token` from response
+3. Click the **Authorize** button (top right of Swagger UI)
+4. Enter: `Bearer <your_token>` and click Authorize.
+
+---
+
+## 🚀 Running Locally
+
+```bash
+# 1. Build and run Spring Boot
+./gradlew bootRun
+
+# Or build the jar
+./gradlew build -x test
+```
+
+The default profile uses PostgreSQL on `localhost:5432` with database/user/password
+`room_rental_db` / `postgres` / `postgres`. Override these using `DB_HOST`, `DB_PORT`,
+`DB_NAME`, `DB_USERNAME`, and `DB_PASSWORD` if your local database differs.
+
+## 🐳 Run with Docker
 
 ```bash
 docker compose up --build
 ```
 
-នេះនឹង run ២ container៖
-- `room-rental-db` → PostgreSQL 16 (port 5432)
-- `room-rental-backend` → Spring Boot app (port 8080)
+The API is then available on `http://localhost:8080`, and Swagger UI is at
+`http://localhost:8080/swagger-ui.html`. Set a long, unique `JWT_SECRET` environment
+variable before deploying outside local development.
 
-Test: `GET http://localhost:8080/api/rooms`
+## ✅ Verification
 
-បញ្ឈប់៖ `docker compose down` (ឬ `docker compose down -v` បើចង់លុប database volume ផងដែរ)
-
-## Setup — Option B: Run Local (មិនប្រើ Docker)
-
-1. ដំឡើង PostgreSQL ក្នុងម៉ាស៊ីន, បង្កើត database ឈ្មោះ `room_rental_db`
-2. កំណត់ environment variables (ឬកែផ្ទាល់ក្នុង `application.properties`)៖
-   `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`
-3. Run:
-   ```
-   ./gradlew bootRun
-   ```
-4. Test: `GET http://localhost:8080/api/rooms`
-
-## Database Config
-
-`application.properties` អាន config ពី environment variables ដោយមាន default value សម្រាប់ local dev៖
-
-| Env Var | Default |
-|---|---|
-| `DB_HOST` | localhost |
-| `DB_PORT` | 5432 |
-| `DB_NAME` | room_rental_db |
-| `DB_USERNAME` | postgres |
-| `DB_PASSWORD` | postgres |
-| `JWT_SECRET` | (default dev secret — **ត្រូវប្តូរនៅ production**) |
-
-នៅក្នុង `docker-compose.yml`, backend service ដាក់ `DB_HOST=postgres` (ឈ្មោះ service) ដើម្បីភ្ជាប់ទៅ container postgres ដោយស្វ័យប្រវត្តិ។
-
-## Next Steps (សម្រាប់ project របស់អ្នក)
-
-- បន្ថែម `User` entity (Owner / Tenant roles)
-- បន្ថែម `Booking`/`Rental` entity ភ្ជាប់ Room ទៅ User
-- Implement JWT authentication ក្នុង `filters/` + `configs/SecurityConfig`
-- Image upload សម្រាប់រូបភាពបន្ទប់ (ដាក់ក្នុង `utils/` ឬបង្កើត `FileStorageService`)
-- **Deploy** — Docker image នេះអាចយកទៅ deploy លើ VPS (Docker Compose) ឬ cloud platform ណាមួយដែលគាំទ្រ Docker (ជំហាននេះនឹងធ្វើនៅពេលក្រោយ)
+```bash
+./gradlew test
+```

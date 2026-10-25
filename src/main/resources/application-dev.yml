@@ -1,48 +1,38 @@
 server:
   port: 30033
 
+file:
+  upload-dir: ./uploads
+
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/mobile_room_rental_db
-    username: my-postgres
-    password: Chhat2105
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:mobile_room_rental_db}
+    username: ${DB_USERNAME:my-postgres}
+    password: ${DB_PASSWORD:Chhat2105}
 
   jpa:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     show-sql: true
 
   flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-    baseline-version: 0
-
-  otp:
-    sms:
-      expire: 10
-      template: "This is one time security code. Don't tell anyone."
-      enbaled: Y
+    enabled: false
 
   servlet:
     multipart:
       max-file-size: 50MB
       max-request-size: 50MB
 
-  upload:
-    server:
-      path: /opt/projects/teach/upload/images/
-
 post:
   free:
     app:
-      jwtSecret: ebe8910a-08c0-11ed-861d-0242ac120002
-      jwtExpirationMs: 300000
-      jwtRefreshExpirationMs: 86400000
+      jwtSecret: ${JWT_SECRET:roomRentalSecretKeyMustBeLongEnoughForHMACSHA256Encryption2026}
+      jwtExpirationMs: 86400000
+      jwtRefreshExpirationMs: 604800000
 
 springdoc:
   swagger-ui:
@@ -53,5 +43,5 @@ springdoc:
     try-it-out-enabled: true
   api-docs:
     path: /v3/api-docs
-  packages-to-scan: com.dinsaren.springbootjwtapi.controllers
+  packages-to-scan: com.chhatkh.dev.controllers
   paths-to-match: /**
