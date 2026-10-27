@@ -1,0 +1,10 @@
+﻿services:
+  postgres:
+    image: postgres:17.5
+    restart: always
+    ports:
+      - "5427:5432"
+    environment:
+      - POSTGRES_PASSWORD=student123
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=roomrental_db

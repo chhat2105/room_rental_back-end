@@ -1,10 +1,23 @@
 spring:
-    application:
-        name: room-rental-service
-    config:
-        import: "optional:configserver:"
-    cloud:
-        config:
-            uri: http://localhost:8081/
-    profiles:
-        active: local
+  application:
+    name: renthub-api
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5427}/${DB_NAME:roomrental_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:student123}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+server:
+  port: ${SERVER_PORT:1212}
+
+post:
+  free:
+    app:
+      jwtSecret: ${JWT_SECRET:7f3a9c1e5b8d2f460a6c9e1d4b7f2a850c3e6d9f1a4b7c0e3d6f9a2c5b8e1d4f}
+      jwtExpirationMs: 86400000
+      jwtRefreshExpirationMs: 604800000
