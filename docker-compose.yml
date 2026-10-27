@@ -6,9 +6,9 @@ services:
     container_name: room-rental-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: room_rental_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${DB_NAME:-room_rental_db}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     ports:
       - "5432:5432"
     volumes:
@@ -29,10 +29,11 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: room_rental_db
-      DB_USERNAME: postgres
-      DB_PASSWORD: MyChhat
-      JWT_SECRET: change-this-secret-key-to-something-long-and-random
+      DB_NAME: ${DB_NAME:-room_rental_db}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET:-7f3a9c1e5b8d2f460a6c9e1d4b7f2a850c3e6d9f1a4b7c0e3d6f9a2c5b8e1d4f}
+      SERVER_PORT: 8080
     ports:
       - "8080:8080"
 
