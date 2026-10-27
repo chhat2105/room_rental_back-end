@@ -211,9 +211,14 @@ public class AuthController {
             }
             User user = new User(req.getUsername(), req.getEmail(), encoder.encode(req.getPassword()), req.getPhoneNumber());
             Set<Role> roles = new HashSet<>();
-            Role role = null;
-            if (req.getRole().equals(UserRole.ROLE_USER) || req.getRole().equals("USER")) {
-                role = roleRepository.findByName(UserRole.ROLE_USER).orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+            Role role;
+            String reqRole = req.getRole() == null ? "TENANT" : req.getRole().trim().toUpperCase();
+            if (reqRole.contains("LANDLORD")) {
+                role = roleRepository.findByName(UserRole.ROLE_LANDLORD).orElseGet(() -> roleRepository.save(new Role(UserRole.ROLE_LANDLORD)));
+            } else if (reqRole.contains("ADMIN")) {
+                role = roleRepository.findByName(UserRole.ROLE_ADMIN).orElseGet(() -> roleRepository.save(new Role(UserRole.ROLE_ADMIN)));
+            } else {
+                role = roleRepository.findByName(UserRole.ROLE_TENANT).orElseGet(() -> roleRepository.save(new Role(UserRole.ROLE_TENANT)));
             }
             roles.add(role);
             user.setRoles(roles);
