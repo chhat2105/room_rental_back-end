@@ -1,12 +1,17 @@
 package com.chhatkh.dev.util;
 
+import com.chhatkh.dev.constants.Constants;
 import com.chhatkh.dev.models.*;
 import com.chhatkh.dev.payload.response.RentHubRes.*;
 
 public final class Mapper {
     private Mapper() {}
 
-    public static String userName(User u) { return u.getUsername(); }
+    public static String userName(User u) {
+        String name = ((u.getFirstName() == null ? "" : u.getFirstName()) + " "
+                + (u.getLastName() == null ? "" : u.getLastName())).trim();
+        return name.isEmpty() ? u.getUsername() : name;
+    }
 
     public static AmenityRes amenity(Amenity a) { return new AmenityRes(a.getId(), a.getName()); }
 
@@ -18,7 +23,7 @@ public final class Mapper {
     public static PropertyRes property(Property p) {
         return new PropertyRes(p.getId(), p.getLandlord().getId(), userName(p.getLandlord()), p.getTitle(),
                 p.getDescription(), p.getPropertyType(), p.getAddress(), p.getLatitude(), p.getLongitude(),
-                p.getPrice(), p.getStatus(), p.getCreatedAt(),
+                p.getPrice(), p.getFurnished(), p.getStatus(), p.getRejectionReason(), p.getCreatedAt(),
                 p.getImages().stream().map(i -> new ImageRes(i.getId(), i.getImageUrl())).toList(),
                 p.getAmenities().stream().map(Mapper::amenity).toList(),
                 p.getRooms().stream().map(Mapper::room).toList());
@@ -39,7 +44,7 @@ public final class Mapper {
         RentalApplication a = c.getApplication();
         return new ContractRes(c.getId(), a.getId(), a.getProperty().getId(), a.getProperty().getTitle(),
                 a.getTenant().getId(), userName(a.getTenant()), c.getRent(), c.getDeposit(),
-                c.getStartDate(), c.getEndDate(), c.getStatus());
+                c.getStartDate(), c.getEndDate(), c.getStatus(), c.getMovedInAt());
     }
 
     public static PaymentRes payment(Payment p) {
@@ -58,6 +63,15 @@ public final class Mapper {
 
     public static ComplaintRes complaint(Complaint c) {
         return new ComplaintRes(c.getId(), c.getTenant().getId(), userName(c.getTenant()), c.getProperty().getId(),
-                c.getProperty().getTitle(), c.getDescription(), c.getStatus());
+                c.getProperty().getTitle(), c.getDescription(), c.getStatus(), c.getResolution());
+    }
+
+    public static UserProfileRes profile(User u, long completed, long active) {
+        return new UserProfileRes(u.getId(), userName(u), u.getEmail(), u.getPhoneNumber(), u.getProfile(), completed, active);
+    }
+
+    public static AdminUserRes adminUser(User u) {
+        return new AdminUserRes(u.getId(), userName(u), u.getEmail(), u.getPhoneNumber(),
+                Constants.STATUS_ACTIVE.equals(u.getStatus()));
     }
 }

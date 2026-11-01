@@ -18,6 +18,8 @@ public class Property {
     private String address;
     private Double latitude;
     private Double longitude;
+    private Boolean furnished = false;
+    @Column(name = "rejection_reason") private String rejectionReason;
     @Column(precision = 12, scale = 2) private BigDecimal price;
     @Enumerated(EnumType.STRING) private PropertyStatus status = PropertyStatus.DRAFT;
     @Column(name = "created_at", updatable = false) private LocalDateTime createdAt;

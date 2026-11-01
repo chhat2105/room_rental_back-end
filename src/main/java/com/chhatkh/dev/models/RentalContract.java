@@ -16,5 +16,6 @@ public class RentalContract {
     @Column(precision = 12, scale = 2) private BigDecimal deposit;
     @Column(name = "start_date") private LocalDate startDate;
     @Column(name = "end_date") private LocalDate endDate;
+    @Column(name = "moved_in_at") private LocalDateTime movedInAt;
     @Enumerated(EnumType.STRING) private ContractStatus status = ContractStatus.PENDING_PAYMENT;
 }

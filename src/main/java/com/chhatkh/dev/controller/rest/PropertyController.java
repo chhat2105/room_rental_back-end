@@ -22,14 +22,11 @@ import java.util.List;
 public class PropertyController {
     private final PropertyService service;
 
+    /** ?q=Toul Kork&type=APARTMENT&minPrice=100&maxPrice=500&bedrooms=2&furnished=true&amenityIds=1,3&lat=11.55&lng=104.92&radiusKm=3 */
     @GetMapping
-    public Page<PropertyRes> search(@RequestParam(required = false) String q,
-                                    @RequestParam(required = false) PropertyType type,
-                                    @RequestParam(required = false) BigDecimal minPrice,
-                                    @RequestParam(required = false) BigDecimal maxPrice,
-                                    @RequestParam(required = false) Integer bedrooms,
+    public Page<PropertyRes> search(PropertyFilter filter,
                                     @PageableDefault(size = 12, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return service.search(q, type, minPrice, maxPrice, bedrooms, pageable);
+        return service.search(filter, pageable);
     }
 
     @GetMapping("/{id}")
