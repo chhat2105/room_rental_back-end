@@ -1,5 +1,5 @@
 # ---------- Stage 1: Build ----------
-FROM gradle:8.10-jdk17 AS build
+FROM gradle:9.7.1-jdk21 AS build
 WORKDIR /app
 
 # Copy Gradle config first (better layer caching for dependencies)
@@ -9,7 +9,7 @@ COPY src ./src
 RUN gradle build -x test --no-daemon
 
 # ---------- Stage 2: Run ----------
-FROM eclipse-temurin:17-jre-jammy
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
 # Copy the built jar from the build stage
