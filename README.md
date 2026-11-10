@@ -70,23 +70,61 @@ Test: `GET http://localhost:8080/api/rooms`
 
 ## Database Config
 
-`application.properties` អាន config ពី environment variables ដោយមាន default value សម្រាប់ local dev៖
+`application.yml` អាន config ពី environment variables ដោយមាន default value សម្រាប់ local dev៖
 
 | Env Var | Default |
 |---|---|
 | `DB_HOST` | localhost |
-| `DB_PORT` | 5432 |
-| `DB_NAME` | room_rental_db |
+| `DB_PORT` | 5427 (ឬ 5432) |
+| `DB_NAME` | roomrental_db |
 | `DB_USERNAME` | postgres |
-| `DB_PASSWORD` | postgres |
-| `JWT_SECRET` | (default dev secret — **ត្រូវប្តូរនៅ production**) |
+| `DB_PASSWORD` | student123 |
+| `SERVER_PORT` | 1212 |
 
-នៅក្នុង `docker-compose.yml`, backend service ដាក់ `DB_HOST=postgres` (ឈ្មោះ service) ដើម្បីភ្ជាប់ទៅ container postgres ដោយស្វ័យប្រវត្តិ។
+---
 
-## Next Steps (សម្រាប់ project របស់អ្នក)
+## 🧪 Test Data & Pre-seeded Accounts
 
-- បន្ថែម `User` entity (Owner / Tenant roles)
-- បន្ថែម `Booking`/`Rental` entity ភ្ជាប់ Room ទៅ User
-- Implement JWT authentication ក្នុង `filters/` + `configs/SecurityConfig`
-- Image upload សម្រាប់រូបភាពបន្ទប់ (ដាក់ក្នុង `utils/` ឬបង្កើត `FileStorageService`)
-- **Deploy** — Docker image នេះអាចយកទៅ deploy លើ VPS (Docker Compose) ឬ cloud platform ណាមួយដែលគាំទ្រ Docker (ជំហាននេះនឹងធ្វើនៅពេលក្រោយ)
+Backend ត្រូវបានបំពាក់ដោយ **`DataInitializer.java`** ដែលនឹងបញ្ចូល test data ពេញលេញដោយស្វ័យប្រវត្តិនៅពេល Spring Boot ចាប់ផ្តើម (Run):
+- ឬអ្នកអាច run ផ្ទាល់តាម SQL Script: [`database/seed_data.sql`](database/seed_data.sql)
+
+### 🔑 Test Accounts (Password សម្រាប់គ្រប់ account: `password123`)
+
+| Username | Role | Full Name | Phone | Purpose |
+|---|---|---|---|---|
+| `admin` | `ROLE_ADMIN` | System Admin | `012345678` | Test Admin Dashboard, property approval, user management |
+| `landlord1` | `ROLE_LANDLORD` | Sokha Chan | `098765432` | Test landlord listing properties, approving applications |
+| `landlord2` | `ROLE_LANDLORD` | Vannak Khem | `098765433` | Test second landlord listings & viewing requests |
+| `tenant1` | `ROLE_TENANT` | Dara Keo | `011223344` | Test active contract, payment history, review & complaints |
+| `tenant2` | `ROLE_TENANT` | Bopha Meng | `011223345` | Test pending applications, viewing request scheduling |
+| `user1` | `ROLE_USER` | Channa Pheng | `088997766` | Test standard user browsing & registration |
+
+### 📦 Pre-seeded Data Included
+1. **11 Roles**: `ROLE_ADMIN`, `ROLE_LANDLORD`, `ROLE_TENANT`, `ROLE_USER`, etc.
+2. **14 Amenities**: WiFi, AC, Swimming Pool, Gym, Parking, Balcony, Security 24/7, Washing Machine, Elevator, Furnished, Pet Friendly, Kitchen, Refrigerator, Hot Water.
+3. **7 Properties**:
+   - Modern 1-Bedroom Condo at BKK1 ($650, PUBLISHED)
+   - Spacious 2-Bedroom Apartment in Toul Kork ($450, PUBLISHED)
+   - Luxury Riverside View Penthouse ($1200, PUBLISHED)
+   - Affordable Studio Room near Russian Market ($260, PUBLISHED)
+   - Modern Family Villa in Sen Sok ($1500, PUBLISHED)
+   - Budget Single Room near RUPP/ITC ($120, PUBLISHED)
+   - Newly Built Studio Pending Approval ($280, PENDING_REVIEW for Admin test)
+4. **Rooms & Photos**: Real room dimensions, prices, and photo links from Unsplash.
+5. **Rental Application & Contract**: Active contract for Tenant 1 with moved-in date.
+6. **Payments**: Deposit (PAID), Month 1 Rent (PAID), Month 2 Rent (PENDING), Overdue Utility (OVERDUE).
+7. **Viewing Requests, Reviews, Complaints, Chat Messages, and Favorites**.
+
+### 🚀 Quick Test Commands
+1. **Swagger UI**: `http://localhost:1212/swagger-ui.html`
+2. **Public Property Search**:
+   ```bash
+   curl -X GET "http://localhost:1212/api/properties"
+   ```
+3. **Login Example**:
+   ```bash
+   curl -X POST "http://localhost:1212/api/auth/token" \
+        -H "Content-Type: application/json" \
+        -d '{"username":"landlord1","password":"password123"}'
+   ```
+

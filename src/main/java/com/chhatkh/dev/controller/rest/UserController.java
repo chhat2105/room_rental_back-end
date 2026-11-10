@@ -70,12 +70,23 @@ public class UserController {
             return ResponseEntity.badRequest().body(response);
         }
 
-        if (!"USER".equals(req.getRole()) && !UserRole.ROLE_USER.name().equals(req.getRole())) {
-            response.badRequest("Unsupported user role");
-            return ResponseEntity.badRequest().body(response);
+        UserRole targetRole = UserRole.ROLE_TENANT;
+        if (StringUtils.hasText(req.getRole())) {
+            String r = req.getRole().toUpperCase().trim();
+            if (r.contains("LANDLORD")) {
+                targetRole = UserRole.ROLE_LANDLORD;
+            } else if (r.contains("ADMIN")) {
+                targetRole = UserRole.ROLE_ADMIN;
+            } else if (r.contains("USER")) {
+                targetRole = UserRole.ROLE_USER;
+            } else {
+                targetRole = UserRole.ROLE_TENANT;
+            }
         }
-        Role role = roleRepository.findByName(UserRole.ROLE_USER)
-                .orElseThrow(() -> new IllegalStateException("Default user role is not configured"));
+
+        UserRole finalTargetRole = targetRole;
+        Role role = roleRepository.findByName(finalTargetRole)
+                .orElseGet(() -> roleRepository.save(new Role(finalTargetRole)));
         User user = new User(req.getUsername(), req.getEmail(),
                 passwordEncoder.encode(req.getPassword()), req.getPhoneNumber());
         user.setRoles(Set.of(role));

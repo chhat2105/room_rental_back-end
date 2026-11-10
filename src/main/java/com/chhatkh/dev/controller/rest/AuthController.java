@@ -6,6 +6,7 @@ import com.chhatkh.dev.models.RefreshToken;
 import com.chhatkh.dev.models.User;
 import com.chhatkh.dev.payload.request.LogOutReq;
 import com.chhatkh.dev.payload.request.LoginReq;
+import com.chhatkh.dev.payload.request.RegisterReq;
 import com.chhatkh.dev.payload.request.TokenRefreshReq;
 import com.chhatkh.dev.payload.response.JwtRes;
 import com.chhatkh.dev.payload.response.MessageRes;
@@ -44,17 +45,27 @@ public class AuthController {
     private final UserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
     private final JwtUtils jwtUtils;
+    private final UserController userController;
     @Value("${post.free.app.jwtExpirationMs}")
     private String expiredToken;
 
     public AuthController(AuthenticationManager authenticationManager,
                           UserRepository userRepository,
                           JwtUtils jwtUtils,
-                          RefreshTokenService refreshTokenService) {
+                          RefreshTokenService refreshTokenService,
+                          UserController userController) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.jwtUtils = jwtUtils;
         this.refreshTokenService = refreshTokenService;
+        this.userController = userController;
+    }
+
+    @Operation(summary = "Register user", description = "Create a new user account (alias for /api/users)")
+    @SecurityRequirements
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@RequestBody RegisterReq req) {
+        return userController.register(req);
     }
 
     @Operation(summary = "Login", description = "Authenticate with phone number and password to receive a JWT access token")

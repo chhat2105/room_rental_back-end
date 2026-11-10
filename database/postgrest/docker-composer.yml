@@ -8,3 +8,5 @@
       - POSTGRES_PASSWORD=student123
       - POSTGRES_USER=postgres
       - POSTGRES_DB=roomrental_db
+    volumes:
+      - ../seed_data.sql:/docker-entrypoint-initdb.d/init.sql
