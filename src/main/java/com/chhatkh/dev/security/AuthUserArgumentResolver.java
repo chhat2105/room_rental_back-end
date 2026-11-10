@@ -4,7 +4,7 @@ import com.chhatkh.dev.dtos.UserDto;
 import com.chhatkh.dev.entities.User;
 import com.chhatkh.dev.exceptions.UnauthorizedException;
 import com.chhatkh.dev.repositories.UserRepository;
-import com.chhatkh.dev.services.AuthService;
+import com.chhatkh.dev.services.UserService;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,11 +18,11 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 public class AuthUserArgumentResolver implements HandlerMethodArgumentResolver {
 
     private final UserRepository userRepository;
-    private final AuthService authService;
+    private final UserService userService;
 
-    public AuthUserArgumentResolver(UserRepository userRepository, AuthService authService) {
+    public AuthUserArgumentResolver(UserRepository userRepository, UserService userService) {
         this.userRepository = userRepository;
-        this.authService = authService;
+        this.userService = userService;
     }
 
     @Override
@@ -65,7 +65,7 @@ public class AuthUserArgumentResolver implements HandlerMethodArgumentResolver {
         }
 
         if (UserDto.class.isAssignableFrom(paramType)) {
-            return authService.toDto(user);
+            return userService.toDto(user);
         }
 
         if (Long.class.isAssignableFrom(paramType)) {
