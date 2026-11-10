@@ -14,5 +14,6 @@ public class Complaint {
     @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "tenant_id") private User tenant;
     @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "property_id") private Property property;
     @Column(columnDefinition = "TEXT") private String description;
+    @Column(columnDefinition = "TEXT") private String resolution;
     @Enumerated(EnumType.STRING) private ComplaintStatus status = ComplaintStatus.OPEN;
 }

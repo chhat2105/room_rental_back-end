@@ -65,4 +65,10 @@ public class RentalController {
     // --- payments (deposit & monthly rent) ---
     @PostMapping("/payments/{id}/pay") @PreAuthorize("hasRole('TENANT')")
     public PaymentRes pay(@PathVariable Long id, @Valid @RequestBody PayReq req) { return service.pay(id, req.method()); }
+
+    @PostMapping("/contracts/{id}/move-in") @PreAuthorize("hasRole('TENANT')")
+    public ContractRes moveIn(@PathVariable Long id) { return service.moveIn(id); }
+
+    @GetMapping("/payments/landlord") @PreAuthorize("hasRole('LANDLORD')")
+    public List<PaymentRes> landlordPayments(@RequestParam(required = false) PaymentStatus status) { return service.landlordPayments(status); }
 }

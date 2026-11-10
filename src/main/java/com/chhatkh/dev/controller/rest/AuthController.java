@@ -1,18 +1,14 @@
-package com.chhatkh.dev.controller.rest.admin;
+package com.chhatkh.dev.controller.rest;
 
 import com.chhatkh.dev.constants.Constants;
 import com.chhatkh.dev.exception.TokenRefreshException;
 import com.chhatkh.dev.models.RefreshToken;
-import com.chhatkh.dev.models.Role;
 import com.chhatkh.dev.models.User;
-import com.chhatkh.dev.models.UserRole;
 import com.chhatkh.dev.payload.request.LogOutReq;
 import com.chhatkh.dev.payload.request.LoginReq;
-import com.chhatkh.dev.payload.request.RegisterReq;
 import com.chhatkh.dev.payload.request.TokenRefreshReq;
 import com.chhatkh.dev.payload.response.JwtRes;
 import com.chhatkh.dev.payload.response.MessageRes;
-import com.chhatkh.dev.repository.RoleRepository;
 import com.chhatkh.dev.repository.UserRepository;
 import com.chhatkh.dev.security.jwt.JwtUtils;
 import com.chhatkh.dev.security.services.RefreshTokenService;
@@ -28,21 +24,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
 
 /**
  * Authentication-only controller: login, logout and access-token refresh.
- * Registration, password-reset and OTP flows have been removed from this
- * controller (move them to a dedicated controller/service if still needed).
  */
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -55,24 +44,17 @@ public class AuthController {
     private final UserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
     private final JwtUtils jwtUtils;
-    private final PasswordEncoder encoder;
-    private final RoleRepository roleRepository;
-
-
-
     @Value("${post.free.app.jwtExpirationMs}")
     private String expiredToken;
 
     public AuthController(AuthenticationManager authenticationManager,
                           UserRepository userRepository,
                           JwtUtils jwtUtils,
-                          RefreshTokenService refreshTokenService, PasswordEncoder encoder, RoleRepository roleRepository) {
+                          RefreshTokenService refreshTokenService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.jwtUtils = jwtUtils;
         this.refreshTokenService = refreshTokenService;
-        this.encoder = encoder;
-        this.roleRepository = roleRepository;
     }
 
     @Operation(summary = "Login", description = "Authenticate with phone number and password to receive a JWT access token")
@@ -148,7 +130,7 @@ public class AuthController {
 
             return ResponseEntity.ok(jwtRes);
 
-        } catch (Exception e) {
+        } catch (AuthenticationException e) {
 
             log.error(
                     "Login failed for username {}",
@@ -176,67 +158,6 @@ public class AuthController {
     public ResponseEntity<?> logoutUser(@RequestBody LogOutReq req) {
         refreshTokenService.deleteByUserId(req.getUserId());
         return ResponseEntity.ok(new MessageRes("Log out successful!", null));
-    }
-
-    @Operation(summary = "Register", description = "Create a new user account")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Account created successfully"),
-            @ApiResponse(responseCode = "400", description = "Validation error or duplicate username / email / phone")
-    })
-    @SecurityRequirements
-    @PostMapping("/register")
-    public ResponseEntity<MessageRes> registerUser(@RequestBody RegisterReq req) {
-        MessageRes messageRes = new MessageRes();
-        log.info("Intercept create account req {}", req);
-        try {
-            if (req.getFirstName().equals("") || req.getLastName().equals("") || req.getPhoneNumber().equals("") || req.getEmail().equals("") || req.getPassword().equals("") || null == req.getPassword() || null == req.getConfirmPassword() || "".equals(req.getPassword()) || "".equals(req.getConfirmPassword())) {
-                messageRes.badRequest("");
-                return new ResponseEntity<>(messageRes, HttpStatus.BAD_REQUEST);
-            }
-            if (!req.getConfirmPassword().equals(req.getPassword())) {
-                messageRes.setConfirmPasswordNotMatch();
-                return new ResponseEntity<>(messageRes, HttpStatus.BAD_REQUEST);
-            }
-            if (userRepository.existsByUsernameAndStatus(req.getUsername(), Constants.STATUS_ACTIVE)) {
-                messageRes.setNameAlreadyUse();
-                return new ResponseEntity<>(messageRes, HttpStatus.BAD_REQUEST);
-            }
-            if (userRepository.existsByEmailAndStatus(req.getEmail(), Constants.STATUS_ACTIVE)) {
-                messageRes.setEmailAlreadyUse();
-                return new ResponseEntity<>(messageRes, HttpStatus.BAD_REQUEST);
-            }
-            if (userRepository.existsByPhoneNumberAndStatus(req.getPhoneNumber(), Constants.STATUS_ACTIVE)) {
-                messageRes.setPhoneAlreadyUse();
-                return new ResponseEntity<>(messageRes, HttpStatus.BAD_REQUEST);
-            }
-            User user = new User(req.getUsername(), req.getEmail(), encoder.encode(req.getPassword()), req.getPhoneNumber());
-            Set<Role> roles = new HashSet<>();
-            Role role;
-            String reqRole = req.getRole() == null ? "TENANT" : req.getRole().trim().toUpperCase();
-            if (reqRole.contains("LANDLORD")) {
-                role = roleRepository.findByName(UserRole.ROLE_LANDLORD).orElseGet(() -> roleRepository.save(new Role(UserRole.ROLE_LANDLORD)));
-            } else if (reqRole.contains("ADMIN")) {
-                role = roleRepository.findByName(UserRole.ROLE_ADMIN).orElseGet(() -> roleRepository.save(new Role(UserRole.ROLE_ADMIN)));
-            } else {
-                role = roleRepository.findByName(UserRole.ROLE_TENANT).orElseGet(() -> roleRepository.save(new Role(UserRole.ROLE_TENANT)));
-            }
-            roles.add(role);
-            user.setRoles(roles);
-            user.setFirstName(req.getFirstName());
-            user.setLastName(req.getLastName());
-            user.setStatus(Constants.STATUS_ACTIVE);
-            user.setChangePassword(Constants.No);
-            user.setProfile(req.getProfile());
-            userRepository.save(user);
-            messageRes.setMessageCreateSuccess("User Open Account successfully!");
-            return new ResponseEntity<>(messageRes, HttpStatus.OK);
-        } catch (Throwable e) {
-            log.info("Error open account req ", e);
-            messageRes.internalServerError(null);
-            return new ResponseEntity<>(messageRes, HttpStatus.INTERNAL_SERVER_ERROR);
-        } finally {
-            log.info("Open account req final result {}", messageRes);
-        }
     }
 
     @Operation(summary = "Refresh token", description = "Get a new access token using a valid refresh token")

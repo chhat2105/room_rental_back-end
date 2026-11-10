@@ -30,23 +30,37 @@ public class PropertyService {
     private final CurrentUser currentUser;
     private final FileStorageService storage;
 
-    // ---------- Tenant: browse / search / details ----------
+    // ---------- Tenant: search location + filters ----------
     @Transactional(readOnly = true)
-    public Page<PropertyRes> search(String q, PropertyType type, BigDecimal min, BigDecimal max, Integer bedrooms, Pageable pageable) {
+    public Page<PropertyRes> search(PropertyFilter f, Pageable pageable) {
         Specification<Property> spec = (root, query, cb) -> {
             query.distinct(true);
             List<Predicate> ps = new ArrayList<>();
             ps.add(cb.equal(root.get("status"), PropertyStatus.PUBLISHED));
-            if (q != null && !q.isBlank()) {
-                String like = "%" + q.toLowerCase() + "%";
+            if (f.q() != null && !f.q().isBlank()) {          // location / keyword
+                String like = "%" + f.q().toLowerCase() + "%";
                 ps.add(cb.or(cb.like(cb.lower(root.get("title")), like), cb.like(cb.lower(root.get("address")), like)));
             }
-            if (type != null) ps.add(cb.equal(root.get("propertyType"), type));
-            if (min != null) ps.add(cb.greaterThanOrEqualTo(root.get("price"), min));
-            if (max != null) ps.add(cb.lessThanOrEqualTo(root.get("price"), max));
-            if (bedrooms != null) {
+            if (f.type() != null) ps.add(cb.equal(root.get("propertyType"), f.type()));
+            if (f.minPrice() != null) ps.add(cb.greaterThanOrEqualTo(root.get("price"), f.minPrice()));
+            if (f.maxPrice() != null) ps.add(cb.lessThanOrEqualTo(root.get("price"), f.maxPrice()));
+            if (f.furnished() != null) ps.add(cb.equal(root.get("furnished"), f.furnished()));
+            if (f.bedrooms() != null) {
                 Join<Property, Room> r = root.join("rooms", JoinType.LEFT);
-                ps.add(cb.greaterThanOrEqualTo(r.get("bedrooms"), bedrooms));
+                ps.add(cb.greaterThanOrEqualTo(r.get("bedrooms"), f.bedrooms()));
+            }
+            if (f.amenityIds() != null) {                      // must have ALL selected amenities
+                for (Long id : f.amenityIds()) {
+                    Join<Property, Amenity> a = root.join("amenities", JoinType.INNER);
+                    ps.add(cb.equal(a.get("id"), id));
+                }
+            }
+            if (f.lat() != null && f.lng() != null) {          // "near me" bounding box
+                double km = f.radiusKm() != null ? f.radiusKm() : 5.0;
+                double dLat = km / 111.0;
+                double dLng = km / (111.0 * Math.max(0.01, Math.cos(Math.toRadians(f.lat()))));
+                ps.add(cb.between(root.<Double>get("latitude"), f.lat() - dLat, f.lat() + dLat));
+                ps.add(cb.between(root.<Double>get("longitude"), f.lng() - dLng, f.lng() + dLng));
             }
             return cb.and(ps.toArray(new Predicate[0]));
         };
@@ -60,7 +74,7 @@ public class PropertyService {
             // drafts are visible only to their owner
             Long me = null;
             try { me = currentUser.get().getId(); } catch (RuntimeException ignored) { }
-            if (me == null || !p.getLandlord().getId().equals(me)) throw new ResourceNotFoundException("Property not found");
+            if (!currentUser.hasRole("ADMIN") && (me == null || !p.getLandlord().getId().equals(me))) throw new ResourceNotFoundException("Property not found");
         }
         return Mapper.property(p);
     }
@@ -133,7 +147,8 @@ public class PropertyService {
         Property p = owned(id);
         if (p.getImages().isEmpty()) throw new BadRequestException("Upload at least one photo before publishing");
         if (p.getPrice() == null) throw new BadRequestException("Set a price before publishing");
-        p.setStatus(PropertyStatus.PUBLISHED);
+        p.setStatus(PropertyStatus.PENDING_REVIEW);   // admin verifies the listing before it goes live
+        p.setRejectionReason(null);
         return Mapper.property(p);
     }
 
@@ -147,6 +162,7 @@ public class PropertyService {
     private void apply(Property p, PropertyReq r) {
         p.setTitle(r.title()); p.setDescription(r.description()); p.setPropertyType(r.propertyType());
         p.setAddress(r.address()); p.setLatitude(r.latitude()); p.setLongitude(r.longitude()); p.setPrice(r.price());
+        p.setFurnished(r.furnished() != null && r.furnished());
         if (r.amenityIds() != null) p.setAmenities(new HashSet<>(amenityRepo.findAllById(r.amenityIds())));
     }
     private void applyRoom(Room r, RoomReq q) {

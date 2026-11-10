@@ -176,6 +176,23 @@ public class RentalService {
         return Mapper.contract(c);               // tenant can now leave a review
     }
 
+    // ---------- Move in ----------
+    public ContractRes moveIn(Long contractId) {
+        RentalContract c = findContract(contractId);
+        if (!c.getApplication().getTenant().getId().equals(currentUser.get().getId())) throw new ForbiddenException("Not your contract");
+        if (c.getStatus() != ContractStatus.ACTIVE) throw new BadRequestException("Pay the deposit first – contract is not active");
+        if (c.getMovedInAt() != null) throw new BadRequestException("Already moved in");
+        c.setMovedInAt(LocalDateTime.now());
+        return Mapper.contract(c);
+    }
+
+    // ---------- Landlord: manage monthly rent ----------
+    @Transactional(readOnly = true)
+    public List<PaymentRes> landlordPayments(PaymentStatus status) {
+        return paymentRepo.findByContractApplicationPropertyLandlordIdOrderByDueDateAsc(currentUser.get().getId()).stream()
+                .filter(p -> status == null || p.getStatus() == status).map(Mapper::payment).toList();
+    }
+
     // ---------- helpers ----------
     private void generateRent(RentalContract c, LocalDate from, LocalDate to) {
         for (LocalDate d = from; d.isBefore(to); d = d.plusMonths(1)) {

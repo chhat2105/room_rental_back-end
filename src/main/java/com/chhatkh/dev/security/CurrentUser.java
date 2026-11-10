@@ -13,6 +13,11 @@ import org.springframework.stereotype.Component;
 public class CurrentUser {
     private final UserRepository userRepository;
 
+    public boolean hasRole(String role) {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_" + role));
+    }
+
     public User get() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !(auth.getPrincipal() instanceof UserDetailsImpl d))
