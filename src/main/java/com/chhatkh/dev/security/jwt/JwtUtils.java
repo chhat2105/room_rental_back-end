@@ -14,6 +14,8 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 @Component
@@ -29,7 +31,20 @@ public class JwtUtils {
     private long jwtExpirationMs;
 
     private SecretKey key() {
-        byte[] secretBytes = Decoders.BASE64.decode(jwtSecret); // if jwtSecret is base64
+        byte[] secretBytes;
+        try {
+            secretBytes = Decoders.BASE64.decode(jwtSecret);
+        } catch (Exception e) {
+            secretBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+        }
+        if (secretBytes.length < 32) {
+            try {
+                secretBytes = MessageDigest.getInstance("SHA-256")
+                        .digest(jwtSecret.getBytes(StandardCharsets.UTF_8));
+            } catch (NoSuchAlgorithmException ex) {
+                throw new IllegalStateException("SHA-256 algorithm not available", ex);
+            }
+        }
         return Keys.hmacShaKeyFor(secretBytes);
     }
 

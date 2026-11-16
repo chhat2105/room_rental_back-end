@@ -12,27 +12,28 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OpenApiConfig {
-    private static final String BEARER_AUTH = "bearerAuth";
+        private static final String BEARER_AUTH = "bearerAuth";
 
-    @Bean
-    public OpenAPI openApi() {
-        return new OpenAPI()
-                .info(new Info()
-                        .title("Spring Boot JWT API")
-                        .description("REST API with JWT Authentication")
-                        .version("v1.0")
-                        .contact(new Contact()
-                                .name("Mr. SAREN")
-                                .url("https://postfreeapp.com")
-                                .email("dinsarenkh@gmail.com"))
-                        .license(new License().name("Apache 2.0").url("https://www.apache.org/licenses/LICENSE-2.0")))
-                .addSecurityItem(new SecurityRequirement().addList(BEARER_AUTH))
-                .components(new Components()
-                        .addSecuritySchemes(BEARER_AUTH, new SecurityScheme()
-                                .name(BEARER_AUTH)
-                                .type(SecurityScheme.Type.HTTP)
-                                .scheme("bearer")
-                                .bearerFormat("JWT")
-                                .description("Paste your JWT token here. Obtain it from POST /api/oauth/token")));
-    }
+        @Bean
+        public OpenAPI openApi() {
+                return new OpenAPI()
+                                .info(new Info()
+                                                .title("Spring Boot JWT API")
+                                                .description("REST API with JWT Authentication")
+                                                .version("v1.0")
+                                                .contact(new Contact()
+                                                                .name("Mr. Chhat Kh")
+                                                                .url("https://postfreeapp.com")
+                                                                .email("chhat2105@gmail.com"))
+                                                .license(new License().name("Apache 2.0")
+                                                                .url("https://www.apache.org/licenses/LICENSE-2.0")))
+                                .addSecurityItem(new SecurityRequirement().addList(BEARER_AUTH))
+                                .components(new Components()
+                                                .addSecuritySchemes(BEARER_AUTH, new SecurityScheme()
+                                                                .name(BEARER_AUTH)
+                                                                .type(SecurityScheme.Type.HTTP)
+                                                                .scheme("bearer")
+                                                                .bearerFormat("JWT")
+                                                                .description("Paste your JWT token here. Obtain it from POST /api/auth/token")));
+        }
 }

@@ -29,7 +29,7 @@ class RefreshTokenServiceTest {
     private UserRepository userRepository;
 
     @InjectMocks
-    private RefreshTokenService refreshTokenService;
+    private RefreshTokenServiceImpl refreshTokenService;
 
     @BeforeEach
     void setUp() {

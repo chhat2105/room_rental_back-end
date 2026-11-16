@@ -3,6 +3,8 @@ package com.chhatkh.dev.models;
 public enum UserRole {
     ROLE_CUSTOMER,
     ROLE_USER,
+    ROLE_TENANT,
+    ROLE_LANDLORD,
     ROLE_MODERATOR,
     ROLE_ADMIN,
     ROLE_SHOP,
