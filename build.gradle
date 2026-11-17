@@ -12,7 +12,7 @@ springBoot {
     mainClass = 'com.chhatkh.dev.RenthubApiApplication'
 }
 java {
-    sourceCompatibility = '17'
+    sourceCompatibility = '21'
 }
 
 tasks.named('jar') {
