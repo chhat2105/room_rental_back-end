@@ -1,9 +1,10 @@
+
 package com.chhatkh.dev.security;
 
 import com.chhatkh.dev.security.jwt.AuthEntryPointJwt;
 import com.chhatkh.dev.security.jwt.AuthTokenFilter;
 import com.chhatkh.dev.security.services.UserDetailsServiceImpl;
-import jakarta.servlet.Filter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -70,16 +71,31 @@ public class WebSecurityConfig {
         return authConfig.getAuthenticationManager();
     }
 
+    // CORS Configuration
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOriginPatterns(List.of("*"));
+
         config.setAllowedMethods(
-                List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                List.of(
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "PATCH",
+                        "DELETE",
+                        "OPTIONS"
+                )
         );
+
         config.setAllowedHeaders(List.of("*"));
+
+        config.setExposedHeaders(
+                List.of("Authorization", "Content-Type")
+        );
+
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
@@ -90,34 +106,46 @@ public class WebSecurityConfig {
         return source;
     }
 
+    // Spring Security Configuration
     @Bean
     public SecurityFilterChain filterChain(
             HttpSecurity http
     ) throws Exception {
 
         http
+                // Enable CORS
                 .cors(Customizer.withDefaults())
+
+                // Disable CSRF for REST API
                 .csrf(AbstractHttpConfigurer::disable)
 
+                // Handle Unauthorized Error
                 .exceptionHandling(ex ->
                         ex.authenticationEntryPoint(unauthorizedHandler)
                 )
 
+                // Stateless JWT Authentication
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
 
+                // API Authorization
                 .authorizeHttpRequests(auth -> auth
 
+                        // Public endpoints
                         .requestMatchers(
+                                "/",
                                 "/error",
-                                "/api/auth/**",
+
                                 "/api/auth/**",
                                 "/api/oauth/**",
                                 "/api/public/**",
+
                                 "/uploads/**",
+
+                                // Swagger
                                 "/openapi/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -126,18 +154,32 @@ public class WebSecurityConfig {
                                 "/webjars/**"
                         ).permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/properties/**", "/api/amenities/**", "/api/reviews/property/**").permitAll()
+                        // Public Register
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/users"
+                        ).permitAll()
 
+                        // Public Property APIs
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/properties/**",
+                                "/api/amenities/**",
+                                "/api/reviews/property/**"
+                        ).permitAll()
+
+                        // Other endpoints require JWT
                         .anyRequest().authenticated()
+                )
+
+                // Register Authentication Provider
+                .authenticationProvider(authenticationProvider())
+
+                // Register JWT Filter
+                .addFilterBefore(
+                        authenticationJwtTokenFilter(),
+                        UsernamePasswordAuthenticationFilter.class
                 );
-
-        http.authenticationProvider(authenticationProvider());
-
-        http.addFilterBefore(
-                (Filter) authenticationJwtTokenFilter(),
-                UsernamePasswordAuthenticationFilter.class
-        );
 
         return http.build();
     }
