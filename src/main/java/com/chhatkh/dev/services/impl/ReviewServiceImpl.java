@@ -33,11 +33,7 @@ public class ReviewServiceImpl implements ReviewService {
     public ReviewRes create(ReviewReq req) {
         User me = currentUser.get();
         Property p = propertyRepo.findById(req.propertyId()).orElseThrow(() -> new ResourceNotFoundException("Property not found"));
-        if (!contractRepo.existsByApplicationTenantIdAndApplicationPropertyIdAndStatus(me.getId(), p.getId(), ContractStatus.COMPLETED))
-            throw new BadRequestException("You can review a property after your rental is completed");
-        if (reviewRepo.existsByTenantIdAndPropertyId(me.getId(), p.getId()))
-            throw new BadRequestException("You already reviewed this property");
-        Review r = new Review();
+        Review r = reviewRepo.findByTenantIdAndPropertyId(me.getId(), p.getId()).orElseGet(Review::new);
         r.setTenant(me);
         r.setProperty(p);
         r.setRating(req.rating());

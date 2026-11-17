@@ -31,7 +31,8 @@ public class ViewingServiceImpl implements ViewingService {
     @Override
     public ViewingRes request(ViewingReq req) {
         Property p = propertyRepo.findById(req.propertyId()).orElseThrow(() -> new ResourceNotFoundException("Property not found"));
-        if (p.getStatus() != PropertyStatus.PUBLISHED) throw new BadRequestException("Property is not available");
+        if (p.getStatus() != PropertyStatus.PUBLISHED && p.getStatus() != PropertyStatus.PENDING_REVIEW)
+            throw new BadRequestException("Property is not available");
         ViewingRequest v = new ViewingRequest();
         v.setTenant(currentUser.get());
         v.setProperty(p);

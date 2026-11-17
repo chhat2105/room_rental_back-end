@@ -16,7 +16,7 @@ import java.util.Set;
 @DynamicUpdate()
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-public class User extends BaseEntity{
+public class User extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -31,7 +31,7 @@ public class User extends BaseEntity{
     private String status;
     private String profile;
     private String changePassword;
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
@@ -119,8 +119,6 @@ public class User extends BaseEntity{
         this.roles = roles;
     }
 
-
-
     public String getProfile() {
         return profile;
     }
@@ -129,7 +127,6 @@ public class User extends BaseEntity{
         this.profile = profile;
     }
 
-
     public String getChangePassword() {
         return changePassword;
     }
@@ -137,7 +134,6 @@ public class User extends BaseEntity{
     public void setChangePassword(String changePassword) {
         this.changePassword = changePassword;
     }
-
 
     public String getVerifyEmail() {
         return verifyEmail;

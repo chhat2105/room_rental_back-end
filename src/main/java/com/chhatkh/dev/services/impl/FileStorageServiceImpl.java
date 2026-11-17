@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 @Service
@@ -24,14 +25,12 @@ public class FileStorageServiceImpl implements FileStorageService {
     @Override
     public String save(MultipartFile file) {
         if (file == null || file.isEmpty()) throw new BadRequestException("File is empty");
-        String type = file.getContentType();
-        if (type == null || !type.startsWith("image/")) throw new BadRequestException("Only image files are allowed");
         String name = file.getOriginalFilename() == null ? "" : file.getOriginalFilename().toLowerCase();
         String ext = name.contains(".") ? name.substring(name.lastIndexOf('.') + 1) : "jpg";
         if (!ext.matches("[a-z0-9]{1,5}")) ext = "jpg";
         String stored = UUID.randomUUID() + "." + ext;
         try {
-            Files.copy(file.getInputStream(), root.resolve(stored));
+            Files.copy(file.getInputStream(), root.resolve(stored), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             throw new BadRequestException("Could not store file");
         }

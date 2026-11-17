@@ -3,8 +3,9 @@ package com.chhatkh.dev.security;
 import com.chhatkh.dev.security.jwt.AuthEntryPointJwt;
 import com.chhatkh.dev.security.jwt.AuthTokenFilter;
 import com.chhatkh.dev.security.services.UserDetailsServiceImpl;
-import jakarta.servlet.Filter;
+import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -47,6 +48,18 @@ public class WebSecurityConfig {
         return new AuthTokenFilter();
     }
 
+    /**
+     * Prevent Spring Boot from auto-registering AuthTokenFilter in the outer Servlet container chain.
+     * Otherwise OncePerRequestFilter runs before Spring Security, gets wiped by SecurityContextHolderFilter,
+     * and then skips running inside the SecurityFilterChain.
+     */
+    @Bean
+    public FilterRegistrationBean<AuthTokenFilter> authTokenFilterRegistration(AuthTokenFilter filter) {
+        FilterRegistrationBean<AuthTokenFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -54,12 +67,9 @@ public class WebSecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-
         DaoAuthenticationProvider authProvider =
                 new DaoAuthenticationProvider(userDetailsService);
-
         authProvider.setPasswordEncoder(passwordEncoder());
-
         return authProvider;
     }
 
@@ -72,9 +82,7 @@ public class WebSecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-
         CorsConfiguration config = new CorsConfiguration();
-
         config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(
                 List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
@@ -84,9 +92,7 @@ public class WebSecurityConfig {
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
-
         source.registerCorsConfiguration("/**", config);
-
         return source;
     }
 
@@ -110,8 +116,11 @@ public class WebSecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-
+                        .dispatcherTypeMatchers(DispatcherType.ERROR, DispatcherType.FORWARD).permitAll()
                         .requestMatchers(
+                                "/error",
+                                "/error/**",
+                                "/favicon.ico",
                                 "/api/auth/**",
                                 "/api/oauth/**",
                                 "/api/public/**",
@@ -124,7 +133,7 @@ public class WebSecurityConfig {
                                 "/webjars/**"
                         ).permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/users", "/api/users/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/properties/**", "/api/amenities/**", "/api/reviews/property/**").permitAll()
 
                         .anyRequest().authenticated()
@@ -133,7 +142,7 @@ public class WebSecurityConfig {
         http.authenticationProvider(authenticationProvider());
 
         http.addFilterBefore(
-                (Filter) authenticationJwtTokenFilter(),
+                authenticationJwtTokenFilter(),
                 UsernamePasswordAuthenticationFilter.class
         );
 

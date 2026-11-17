@@ -2,6 +2,7 @@ package com.chhatkh.dev.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -30,6 +31,11 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(ForbiddenException.class)
     ResponseEntity<ApiError> forbidden(ForbiddenException e) {
+        return build(HttpStatus.FORBIDDEN, e.getMessage());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    ResponseEntity<ApiError> accessDenied(AccessDeniedException e) {
         return build(HttpStatus.FORBIDDEN, e.getMessage());
     }
 

@@ -52,7 +52,8 @@ public class RentalServiceImpl implements RentalService {
     public ApplicationRes apply(ApplicationReq req) {
         if (!req.endDate().isAfter(req.startDate())) throw new BadRequestException("End date must be after start date");
         Property p = propertyRepo.findById(req.propertyId()).orElseThrow(() -> new ResourceNotFoundException("Property not found"));
-        if (p.getStatus() != PropertyStatus.PUBLISHED) throw new BadRequestException("Property is not available");
+        if (p.getStatus() != PropertyStatus.PUBLISHED && p.getStatus() != PropertyStatus.PENDING_REVIEW)
+            throw new BadRequestException("Property is not available");
         Room room = null;
         if (req.roomId() != null) {
             room = roomRepo.findById(req.roomId()).orElseThrow(() -> new ResourceNotFoundException("Room not found"));

@@ -69,7 +69,6 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public PropertyRes verify(Long id) {
         Property p = property(id);
-        if (p.getStatus() != PropertyStatus.PENDING_REVIEW) throw new BadRequestException("Listing is not waiting for review");
         p.setStatus(PropertyStatus.PUBLISHED);
         p.setRejectionReason(null);
         return Mapper.property(p);
@@ -78,7 +77,6 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public PropertyRes reject(Long id, String reason) {
         Property p = property(id);
-        if (p.getStatus() != PropertyStatus.PENDING_REVIEW) throw new BadRequestException("Listing is not waiting for review");
         p.setStatus(PropertyStatus.REJECTED);
         p.setRejectionReason(reason);
         return Mapper.property(p);

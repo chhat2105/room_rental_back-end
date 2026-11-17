@@ -26,7 +26,7 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "Validation error or duplicate username / email / phone")
     })
     @SecurityRequirements
-    @PostMapping
+    @PostMapping({"", "/register"})
     public ResponseEntity<MessageRes> register(@RequestBody RegisterReq req) {
         return userService.register(req);
     }

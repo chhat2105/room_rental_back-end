@@ -12,11 +12,11 @@ import java.util.Optional;
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
     Optional<RefreshToken> findByToken(String token);
 
-    @Modifying
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("delete from RefreshToken token where token.user.id = :userId")
     int deleteByUserId(@Param("userId") Long userId);
 
-    @Modifying
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     int deleteByUser(User user);
 
 }

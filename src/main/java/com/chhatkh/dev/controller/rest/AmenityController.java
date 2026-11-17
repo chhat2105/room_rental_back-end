@@ -1,18 +1,13 @@
 package com.chhatkh.dev.controller.rest;
 
-import com.chhatkh.dev.models.enums.*;
-import com.chhatkh.dev.payload.request.RentHubReq.*;
-import com.chhatkh.dev.payload.response.RentHubRes.*;
-import com.chhatkh.dev.services.*;
+import com.chhatkh.dev.payload.request.RentHubReq.AmenityReq;
+import com.chhatkh.dev.payload.response.RentHubRes.AmenityRes;
+import com.chhatkh.dev.services.AmenityService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.http.*;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import java.math.BigDecimal;
+
 import java.util.List;
 
 @RestController
@@ -21,9 +16,14 @@ import java.util.List;
 public class AmenityController {
     private final AmenityService service;
 
-    @GetMapping public List<AmenityRes> all() { return service.all(); }
+    @GetMapping
+    public List<AmenityRes> all() {
+        return service.all();
+    }
 
-    @PostMapping @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('ADMIN','LANDLORD')")
-    public AmenityRes create(@Valid @RequestBody AmenityReq req) { return service.create(req); }
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public AmenityRes create(@Valid @RequestBody AmenityReq req) {
+        return service.create(req);
+    }
 }

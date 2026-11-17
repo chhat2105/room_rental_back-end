@@ -22,7 +22,7 @@ public final class RentHubReq {
     public record RoomReq(@NotBlank String roomNumber, Integer bedrooms, Integer bathrooms, Double size,
                           @NotNull @Positive BigDecimal price) {}
     public record AmenityReq(@NotBlank String name) {}
-    public record ViewingReq(@NotNull Long propertyId, @NotNull @FutureOrPresent LocalDate date, @NotNull LocalTime time) {}
+    public record ViewingReq(@NotNull Long propertyId, @NotNull LocalDate date, @NotNull LocalTime time) {}
     public record ApplicationReq(@NotNull Long propertyId, Long roomId, @NotNull LocalDate startDate, @NotNull LocalDate endDate) {}
     public record ApproveReq(@Positive BigDecimal deposit) {}
     public record PayReq(@NotNull PaymentMethod method) {}

@@ -62,7 +62,7 @@ public class UserServiceImpl implements UserService {
         }
 
         UserRole targetRole = resolveRole(req.getRole());
-        if (targetRole == null) {
+        if (targetRole == null || targetRole == UserRole.ROLE_ADMIN) {
             response.badRequest("Unsupported user role");
             return ResponseEntity.badRequest().body(response);
         }
@@ -91,7 +91,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserRole resolveRole(String roleInput) {
-        if (!StringUtils.hasText(roleInput)) {
+        if (!StringUtils.hasText(roleInput) || "string".equalsIgnoreCase(roleInput.trim())) {
             return UserRole.ROLE_USER;
         }
         String normalized = roleInput.trim().toUpperCase(Locale.ROOT);

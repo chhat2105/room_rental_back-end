@@ -2,6 +2,7 @@ package com.chhatkh.dev.security.jwt;
 
 import com.chhatkh.dev.security.services.UserDetailsImpl;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
@@ -90,8 +91,8 @@ public class JwtUtils {
         } catch (UnsupportedJwtException e) {
             logger.error("JWT token is unsupported: {}", e.getMessage());
 
-        } catch (IllegalArgumentException e) {
-            logger.error("JWT claims string is empty: {}", e.getMessage());
+        } catch (JwtException | IllegalArgumentException e) {
+            logger.error("JWT validation failed: {}", e.getMessage());
         }
 
         return false;

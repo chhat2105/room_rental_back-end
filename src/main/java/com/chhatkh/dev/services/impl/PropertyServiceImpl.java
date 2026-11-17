@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -180,18 +181,23 @@ public class PropertyServiceImpl implements PropertyService {
     @Override
     public PropertyRes publish(Long id) {
         Property p = owned(id);
-        if (p.getImages().isEmpty()) throw new BadRequestException("Upload at least one photo before publishing");
+        if (p.getPrice() == null && !p.getRooms().isEmpty()) {
+            BigDecimal roomPrice = p.getRooms().get(0).getPrice();
+            if (roomPrice != null) {
+                p.setPrice(roomPrice);
+            }
+        }
         if (p.getPrice() == null) throw new BadRequestException("Set a price before publishing");
-        p.setStatus(PropertyStatus.PENDING_REVIEW);
+        p.setStatus(PropertyStatus.PUBLISHED);
         p.setRejectionReason(null);
-        return Mapper.property(p);
+        return Mapper.property(propertyRepo.saveAndFlush(p));
     }
 
     @Override
     public PropertyRes unpublish(Long id) {
         Property p = owned(id);
         p.setStatus(PropertyStatus.UNPUBLISHED);
-        return Mapper.property(p);
+        return Mapper.property(propertyRepo.saveAndFlush(p));
     }
 
     private void apply(Property p, PropertyReq r) {
@@ -203,7 +209,11 @@ public class PropertyServiceImpl implements PropertyService {
         p.setLongitude(r.longitude());
         p.setPrice(r.price());
         p.setFurnished(r.furnished() != null && r.furnished());
-        if (r.amenityIds() != null) p.setAmenities(new HashSet<>(amenityRepo.findAllById(r.amenityIds())));
+        if (r.amenityIds() != null && !r.amenityIds().isEmpty()) {
+            p.setAmenities(new HashSet<>(amenityRepo.findAllById(r.amenityIds())));
+        } else {
+            p.setAmenities(new HashSet<>());
+        }
     }
 
     private void applyRoom(Room r, RoomReq q) {

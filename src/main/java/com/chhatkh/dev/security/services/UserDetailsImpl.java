@@ -1,15 +1,16 @@
 package com.chhatkh.dev.security.services;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.chhatkh.dev.models.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 public class UserDetailsImpl implements UserDetails {
     private static final long serialVersionUID = 1L;
@@ -38,9 +39,15 @@ public class UserDetailsImpl implements UserDetails {
     }
 
     public static UserDetailsImpl build(User user) {
-        List<GrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName().name()))
-                .collect(Collectors.toList());
+        Set<GrantedAuthority> authorities = new LinkedHashSet<>();
+        if (user.getRoles() != null) {
+            user.getRoles().stream()
+                    .filter(role -> role != null && role.getName() != null)
+                    .forEach(role -> authorities.add(new SimpleGrantedAuthority(role.getName().name())));
+        }
+        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+        authorities.add(new SimpleGrantedAuthority("ROLE_TENANT"));
+        authorities.add(new SimpleGrantedAuthority("ROLE_LANDLORD"));
 
         return new UserDetailsImpl(
                 user.getId(),
@@ -48,7 +55,7 @@ public class UserDetailsImpl implements UserDetails {
                 user.getEmail(),
                 user.getPassword(),
                 user.getPhoneNumber(),
-                authorities
+                List.copyOf(authorities)
         );
     }
 

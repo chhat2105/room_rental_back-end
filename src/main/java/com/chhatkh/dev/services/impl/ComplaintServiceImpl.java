@@ -35,8 +35,6 @@ public class ComplaintServiceImpl implements ComplaintService {
     public ComplaintRes create(ComplaintReq req) {
         User me = currentUser.get();
         Property p = propertyRepo.findById(req.propertyId()).orElseThrow(() -> new ResourceNotFoundException("Property not found"));
-        if (!contractRepo.existsByApplicationTenantIdAndApplicationPropertyIdAndStatus(me.getId(), p.getId(), ContractStatus.ACTIVE))
-            throw new BadRequestException("You can only file a complaint for a property you are currently renting");
         Complaint c = new Complaint();
         c.setTenant(me);
         c.setProperty(p);
