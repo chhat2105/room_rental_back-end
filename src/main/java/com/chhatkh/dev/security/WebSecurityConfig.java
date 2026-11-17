@@ -112,6 +112,8 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         .requestMatchers(
+                                "/error",
+                                "/api/auth/**",
                                 "/api/auth/**",
                                 "/api/oauth/**",
                                 "/api/public/**",
