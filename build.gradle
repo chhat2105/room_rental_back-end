@@ -15,8 +15,15 @@ java {
     sourceCompatibility = '21'
 }
 
+repositories {
+    mavenCentral()
+}
+
 tasks.named('jar') {
     enabled = false
+}
+repositories {
+    mavenCentral()
 }
 
 dependencies {

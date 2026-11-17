@@ -6,7 +6,7 @@ COPY src ./src
 RUN gradle bootJar -x test --no-daemon
 
 # ---------- Stage 2: Run ----------
-FROM eclipse-temurin:17-jre-jammy
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 COPY --from=build /app/build/libs/*.jar app.jar
 ENV JAVA_OPTS="-Xmx384m"
