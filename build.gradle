@@ -11,15 +11,12 @@ description = 'renthub-api'
 springBoot {
     mainClass = 'com.chhatkh.dev.RenthubApiApplication'
 }
-
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
+    sourceCompatibility = '17'
 }
 
-repositories {
-    mavenCentral()
+tasks.named('jar') {
+    enabled = false
 }
 
 dependencies {

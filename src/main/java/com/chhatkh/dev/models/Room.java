@@ -11,7 +11,9 @@ import java.util.*;
 @Getter @Setter @NoArgsConstructor
 public class Room {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
-    @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "property_id") private Property property;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "property_id", nullable = false)
+    private Property property;
     @Column(name = "room_number", nullable = false) private String roomNumber;
     private Integer bedrooms;
     private Integer bathrooms;

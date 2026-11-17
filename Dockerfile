@@ -1,20 +1,14 @@
 # ---------- Stage 1: Build ----------
-FROM gradle:9.7.1-jdk21 AS build
+FROM gradle:8-jdk21 AS build
 WORKDIR /app
-
-# Copy Gradle config first (better layer caching for dependencies)
 COPY build.gradle settings.gradle ./
 COPY src ./src
-
-RUN gradle build -x test --no-daemon
+RUN gradle bootJar -x test --no-daemon
 
 # ---------- Stage 2: Run ----------
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
-
-# Copy the built jar from the build stage
 COPY --from=build /app/build/libs/*.jar app.jar
-
+ENV JAVA_OPTS="-Xmx384m"
 EXPOSE 8080
-
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar app.jar --spring.profiles.active=deploy"]
